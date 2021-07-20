@@ -1,16 +1,23 @@
 #include <julia.h>
 #include <stdio.h>
+#include <string.h>
 
-JULIA_DEFINE_FAST_TLS() // only define this once, in an executable (not in a shared library) if you want fast code.
+#include "../include/test.h"
 
-int main(int argc, char *argv[])
+// JULIA_DEFINE_FAST_TLS() // only define this once, in an executable (not in a shared library) if you want fast code.
+
+int test()
 {
-    /* required: setup the Julia context */
-    jl_init();
-    jl_eval_string("using Pkg; Pkg.activate(\".\"); Pkg.instantiate(; verbose=true);");
+   /* required: setup the Julia context */
+   jl_init();
+   // char cmd_start[200] = "using Pkg; Pkg.activate(";
+   // char cwd[200] = MKDIR;
+   // char cmd_end[200] = "); Pkg.instantiate(; verbose=true);";
+   // strcat(cmd_start, strcat(cwd, cmd_end));
+   jl_eval_string("\".\"");
 
-    /* run Julia commands */
-    jl_eval_string("using ACE, JuLIP");
+   /* run Julia commands */
+   jl_eval_string("using ACE, JuLIP");
 
    /* load a potential */
     jl_eval_string("D = load_json(\"randpot.json\"); V = read_dict(D)");
