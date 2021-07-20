@@ -4,23 +4,18 @@ This example shows how one could build ACE wrapper in C.
 
 ## Setup
 
-### Windows
-
 1. Install julia and [ACE.jl](https://github.com/ACEsuit/ACE.jl/tree/dev-v0.8.x)
 
-2. Set path to julia directory by running the following in bash
+2. Run makefile using the following command
 
 ```bash
-set JULIA_DIR=(path to Julia directory)
+make JULIA_DIR=(path to Julia directory)
 ```
 
-3. Run makefile
+3. (Windows only) Add path to dynamic folder to <code>PATH</code> system enviromental variables
 
-4. Add path to dynamic folder to <code>PATH</code> system enviromental variables
-
-5. When compiling executable link dynamic library and include header file using the following command
+4. When compiling executable link dynamic library and include header file using the following command
 
 ```bash
 gcc -L../test_lib/dynamic -I../test_lib/include -Wl,-rpath,../test_lib/dynamic  main.c -ltest
 ```
-
