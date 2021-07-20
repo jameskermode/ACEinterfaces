@@ -1,6 +1,6 @@
 #include <julia.h>
 #include <stdio.h>
-#include <string.h>
+// #include <string.h>
 
 #include "../include/test.h"
 
@@ -10,17 +10,17 @@ int test()
 {
    /* required: setup the Julia context */
    jl_init();
-   // char cmd_start[200] = "using Pkg; Pkg.activate(";
-   // char cwd[200] = MKDIR;
-   // char cmd_end[200] = "); Pkg.instantiate(; verbose=true);";
-   // strcat(cmd_start, strcat(cwd, cmd_end));
-   jl_eval_string("\".\"");
+   char cmd_start[200] = "using Pkg; Pkg.activate(\"";
+   char cwd[200] = MKDIR;
+   char cmd_end[200] = "\"); Pkg.instantiate(; verbose=true);";
+   strcat(cmd_start, strcat(cwd, cmd_end));
+   jl_eval_string(cmd_start);
 
    /* run Julia commands */
-   jl_eval_string("using ACE, JuLIP");
+   jl_eval_string("using ACE, JuLIP;");
 
    /* load a potential */
-    jl_eval_string("D = load_json(\"randpot.json\"); V = read_dict(D)");
+   jl_eval_string("D = load_json(\"./randpot.json\"); V = read_dict(D)");
 
    /* create a structure */
    jl_eval_string("at = bulk(:Si, cubic=true) * 3");

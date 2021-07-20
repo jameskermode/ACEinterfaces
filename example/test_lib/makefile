@@ -41,4 +41,5 @@ test: ./dynamic/$(LIB_TYPE)
 ./static/test.o: ./src/test.c
 	$(CC) -c -o ./static/test.o \
 	-fPIC -I$(JULIA_DIR)/include/julia \
+	-DMKDIR=\"$(mkfile_dir)\" \
 	./src/test.c -ljulia
