@@ -1,5 +1,4 @@
 CC=gcc
-JULIA_DIR=C:\Users\Administrator\AppData\Local\Programs\Julia-1.6.2
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 mkfile_dir := $(dir $(mkfile_path))
