@@ -16,12 +16,26 @@ void init_calc(char IP_name){
     jl_eval_string(load_command);
 }
 
-double calculate(double* cell, short* bc, double* positionss, int* Z){
+/* Functions from here need to be implemented somehow */
+double energy(double* cell, short* bc, double* positionss, int* Z){
 
     jl_eval_string("at = Atoms(X = _X, Z = _Z, pbc = _bc, cell = _cell)");
 
+}
+
+double forces(double* cell, short* bc, double* positionss, int* Z){
+
+    jl_eval_string("at = Atoms(X = _X, Z = _Z, pbc = _bc, cell = _cell)");
 
 }
+
+double stress(double* cell, short* bc, double* positionss, int* Z){
+
+    jl_eval_string("at = Atoms(X = _X, Z = _Z, pbc = _bc, cell = _cell)");
+
+}
+/* I am not sure where the follwing line should come. */
+// jl_atexit_hook(0);
 
 /* From here is what I found in the cace code already */
 
