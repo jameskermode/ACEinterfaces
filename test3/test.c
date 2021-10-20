@@ -29,10 +29,10 @@ int main(int argc, char *argv[])
    jl_value_t* jl_float64 = jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
    jl_value_t* jl_int = jl_apply_array_type((jl_value_t*)jl_int64_type, 1);
 
-   jl_array_t* _X          = jl_alloc_array_1d(jl_float64, 3 * Nat);
-   jl_array_t* _cell          = jl_alloc_array_1d(jl_float64, 9);
-   jl_array_t* _Z          = jl_alloc_array_1d(jl_int, Nat);
-   jl_array_t* _bc          = jl_alloc_array_1d(jl_int, 3);
+   jl_array_t* _X = jl_alloc_array_1d(jl_float64, 3 * Nat);
+   jl_array_t* _cell = jl_alloc_array_1d(jl_float64, 9);
+   jl_array_t* _Z = jl_alloc_array_1d(jl_int, Nat);
+   jl_array_t* _bc = jl_alloc_array_1d(jl_int, 3);
 
    double *XData = (double*)jl_array_data(_X);
    for (int i = 0; i < 3*Nat; i++) XData[i] = positions[i];    // memcpy
@@ -50,11 +50,15 @@ int main(int argc, char *argv[])
 
 
    jl_function_t *display = jl_get_function(jl_base_module, "display");
-   jl_call1(display, (jl_value_t*)_X);
-
-   jl_value_t* _at = jl_call3(_atoms_from_c, _X, _Z, _bc);
+   jl_call1(display, (jl_value_t*)_X);   
+   jl_value_t *_at = jl_call3(_atoms_from_c, (jl_value_t*)_X, (jl_value_t*)_Z, (jl_value_t*)_bc);
    jl_call1(display, (jl_value_t*)_at);
 
+   jl_function_t *_set_cell = jl_eval_string("(at, cell) -> at.set_cell(cell)");
+   jl_value_t *_at_wcell = jl_call2(_set_cell, (jl_value_t*)_at, (jl_value_t*)_cell);
+   jl_call1(display, (jl_value_t*)_at_wcell);
+
+  
    // jl_eval_string("D = load_json(\"randpot.json\"); V = read_dict(D)");
 
 
