@@ -22,6 +22,11 @@ int main(int argc, char *argv[])
    double *BData = (double*)jl_array_data(_B);
    for (int i = 0; i < 9; i++) BData[i] = B[i]; 
 
+    jl_value_t **args;
+    JL_GC_PUSHARGS(args, 2); // args can now hold 2 `jl_value_t*` objects
+    args[0] = (jl_value_t*)_A;
+    args[1] = (jl_value_t*)_B;
+
    jl_function_t *display = jl_get_function(jl_base_module, "display");
 
    jl_call1(display, (jl_value_t*)_A); 
@@ -29,6 +34,8 @@ int main(int argc, char *argv[])
 
    jl_call1(display, (jl_value_t*)_B);   
    printf("\n");
+
+   JL_GC_POP();
 
     jl_atexit_hook(0);
     return 0;
