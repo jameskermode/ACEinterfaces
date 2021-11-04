@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
    /* create the JuLIP structure */ 
    int Nat = 3;
    jl_value_t* jl_float64 = jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
-   jl_value_t* jl_int = jl_apply_array_type((jl_value_t*)jl_int64_type, 1);
+   jl_value_t* jl_int = jl_apply_array_type((jl_value_t*)jl_int8_type, 1);
 
    jl_array_t* _X = jl_alloc_array_1d(jl_float64, 3 * Nat);
    jl_array_t* _cell = jl_alloc_array_1d(jl_float64, 9);
@@ -46,12 +46,22 @@ int main(int argc, char *argv[])
    double *bcData = (double*)jl_array_data(_bc);
    for (int i = 0; i < 3; i++) bcData[i] = bc[i]; 
 
-   jl_function_t *_atoms_from_c = jl_eval_string("(X, Z, bc) -> Atoms(X = X, Z = Z, pbc = bc)");
+   jl_value_t **args;
+   JL_GC_PUSHARGS(args, 4); // args can now hold 4 `jl_value_t*` objects
+   args[0] = (jl_value_t*)_X;
+   args[1] = (jl_value_t*)_cell;
+   args[2] = (jl_value_t*)_Z;
+   args[3] = (jl_value_t*)_bc;
 
+   jl_function_t *_atoms_from_c = jl_eval_string("(X, Z, bc) -> Atoms(X = X, Z = Z, pbc = bc)");
 
    jl_function_t *display = jl_get_function(jl_base_module, "display");
    jl_call1(display, (jl_value_t*)_X);   
+   jl_call1(display, (jl_value_t*)_Z);
    jl_value_t *_at = jl_call3(_atoms_from_c, (jl_value_t*)_X, (jl_value_t*)_Z, (jl_value_t*)_bc);
+   // jl_call1(display, args[0]);
+   // jl_value_t *_at = jl_call3(_atoms_from_c, args[0], args[2], args[3]);
+   JL_GC_PUSH1(&_at);
    jl_call1(display, (jl_value_t*)_at);
 
    jl_function_t *_set_cell = jl_eval_string("(at, cell) -> at.set_cell(cell)");
@@ -81,6 +91,7 @@ int main(int argc, char *argv[])
          Julia time to cleanup pending write requests
          and run all finalizers
     */
-    jl_atexit_hook(0);
-    return 0;
+   JL_GC_POP();
+   jl_atexit_hook(0);
+   return 0;
 }
