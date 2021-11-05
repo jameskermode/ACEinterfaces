@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "morse.h"
+#include "lj.h"
 
 #define EPSILON 1.0;
 #define SIGMA 1.0;
@@ -57,8 +57,8 @@ void forces(double* positions, int Nats, double* Forces){
         Forces[3*j] -= f1;
         Forces[3*i + 1] += f2;
         Forces[3*j + 1] -= f2;
-        Forces[3*i + 2] += f2;
-        Forces[3*j + 2] -= f2;
+        Forces[3*i + 2] += f3;
+        Forces[3*j + 2] -= f3;
       }
     }
 }

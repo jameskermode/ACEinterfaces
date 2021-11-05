@@ -1,6 +1,6 @@
 ## Instructions
 To compile do 
 ```
-gcc -fPIC -c morse.c
-gcc morse.o -shared -o morse.so
+gcc -fPIC -c lj.c
+gcc lj.o -shared -o lj.so
 ```

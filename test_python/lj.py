@@ -3,7 +3,7 @@ from numpy.ctypeslib import ndpointer
 import numpy as np
 from time import time
 
-lib = cdll.LoadLibrary("./morse.so")
+lib = cdll.LoadLibrary("./lj.so")
 energy = lib.energy
 energy.restype = c_double
 energy.argtypes = [ndpointer(c_double, flags="C_CONTIGUOUS"), c_int]
@@ -29,7 +29,7 @@ def py_energy(positions, Nats):
 
 ### TEST ENERGIES
 np.random.seed(124)
-Nats = 20
+Nats = 1000
 positions = np.random.uniform(-100, 100, (Nats, 3))
 #print(positions)
 #print(positions.flatten())
@@ -38,7 +38,7 @@ pyE = py_energy(positions, Nats)
 t1 = time()
 C_E = energy(positions.flatten(), Nats)
 t2 = time()
-print("Energy Python: {0:.1f} in {1:.1f} seconds".format( pyE, t1 - t0))
+print("Energy Python: {0:.3f} in {1:.3f} seconds".format( pyE, t1 - t0))
 print("Energy C: {0:.3f} in {1:.3f} seconds".format( C_E, t2 - t1))
 
 ### TEST FORCES
