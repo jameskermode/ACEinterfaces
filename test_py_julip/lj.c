@@ -52,12 +52,25 @@ void julip_cleanup() {
 }
 
 
-void* init_lj() {
+void* init_lj(char* idstr) {
    jl_value_t* calc = jl_eval_string("LennardJones() * SplineCutoff(15.0, 20.0)");
-   // save_ref(calc);
-   jl_set_global(jl_main_module, jl_symbol("_cace_calculator"), calc);
+   jl_set_global(jl_main_module, jl_symbol(idstr), calc);
    return (void*) calc;
 }
+
+void* init_calculator(char* idstr, char* initcmd) {
+   jl_value_t* calc = jl_eval_string(initcmd);
+   jl_set_global(jl_main_module, jl_symbol(idstr), calc);
+   return (void*) calc;
+}
+
+// void* load_calculator(char* idstr, char* fpath) {
+//    jl_value_t* calc = jl_eval_string(initcmd);
+//    jl_set_global(jl_main_module, jl_symbol(idstr), calc);
+//    return (void*) calc;
+// }
+
+
 
 jl_value_t* atoms_from_c(double* X, 
                          int32_t* Z, 
@@ -94,26 +107,15 @@ double unbox_float64(jl_value_t* jlval) {
    return 0.0;
 }
 
-double energy(void *calculator, 
-              double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
+double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
 
    jl_value_t** args; 
    JL_GC_PUSHARGS(args, 2);
 
-   jl_value_t* calc = jl_eval_string("_cace_calculator");
-   // jl_value_t* calc = (jl_value_t*)(init_lj());
-   // args[0] = calc;
-   // jl_value_t* calc = (jl_value_t*) calculator;
-
+   jl_value_t* calc = jl_eval_string(calcid);
+   args[0] = calc; 
    jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
    args[1] = at;
-
-   // jl_function_t *energy = jl_get_function(jl_base_module, "JuLIP.energy");
-   // jl_call2(energy, calc, at);   
-   // jl_function_t *display = jl_get_function(jl_base_module, "display");
-   // jl_call1(display, calc); println(); 
-   // jl_call1(display, (jl_value_t*)calculator); 
-   
 
    jl_value_t *energyfcn = jl_get_function(jl_main_module, "energy");
    jl_value_t* jlE = jl_call2(energyfcn, calc, at);   
@@ -123,32 +125,27 @@ double energy(void *calculator,
    return unbox_float64(jlE);
 }
 
-// void forces(double* positions, int Nats, double* Forces){
-//   for (int i = 0; i < 3*Nats; i++)
-//   {
-//     Forces[i] = 0.0;
-//   }
+
+
+
+void forces(char* calcid, double *F, 
+              double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
   
-//   for (int i = 0; i < Nats - 1; i++)
-//     {
-//       for (int j = i + 1; j < Nats; j++)
-//       {
-//         double D = 0.0;
-//         D += pow(positions[3*i] - positions[3*j], 2);
-//         D += pow(positions[3*i+1] - positions[3*j+1], 2);
-//         D += pow(positions[3*i+2] - positions[3*j+2], 2);
-//         D = pow(D, 0.5);
-//         // printf("C distance: %f\n", D);
-//         double F = LJ_d(D, 1.0, 1.0) / pow(1, 1/3);
-//         double f1 = (positions[3*i] - positions[3*j]) / D * F;
-//         double f2 = (positions[3*i+1] - positions[3*j+1]) / D * F;
-//         double f3 = (positions[3*i+2] - positions[3*j+2]) / D * F;
-//         Forces[3*i] += f1;
-//         Forces[3*j] -= f1;
-//         Forces[3*i + 1] += f2;
-//         Forces[3*j + 1] -= f2;
-//         Forces[3*i + 2] += f3;
-//         Forces[3*j + 2] -= f3;
-//       }
-//     }
-// }
+   jl_value_t** args; 
+   JL_GC_PUSHARGS(args, 2);
+
+
+   jl_value_t* calc = jl_eval_string(calcid);
+   args[0] = calc; 
+   jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
+   args[1] = at;
+
+   jl_value_t *forcefcn = jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
+   jl_array_t* _F = (jl_array_t*)jl_call2(forcefcn, calc, at);
+   double *Fdata = (double*)jl_array_data(_F);
+   for (int i = 0; i < 3*Nat; i++) F[i] = Fdata[i];
+
+   JL_GC_POP();
+
+   return; 
+}
