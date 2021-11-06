@@ -140,14 +140,14 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
       // } else {
       //    E = unbox_float64(jlE); 
       // }
-      jl_eval_string("D = load_json(\"randpotHO.json\"); V = read_dict(D)");
+      // jl_eval_string("D = load_json(\"randpotHO.json\"); V = read_dict(D)");
       jl_eval_string("at = bulk(:Si, cubic=true) * 3");
       jl_eval_string("at.Z[:] .= AtomicNumber(8)");
       jl_eval_string("at.Z[2:3:end] .= AtomicNumber(1)");
       jl_eval_string("rattle!(at, 0.1)");
 
       /* evaluate the energy on the structure */
-      jl_value_t *jlE = jl_eval_string("energy(V, at)");
+      jl_value_t *jlE = jl_eval_string("energy(cace_ace, at)");
       if (jl_exception_occurred()) {
          printf("...failed again");
       } else {
