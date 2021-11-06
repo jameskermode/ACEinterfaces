@@ -13,10 +13,12 @@ int main(int argc, char *argv[])
     jl_eval_string("using ACE, JuLIP");
 
    /* load a potential */
-    jl_eval_string("D = load_json(\"randpot.json\"); V = read_dict(D)");
+    jl_eval_string("D = load_json(\"randpotHO.json\"); V = read_dict(D)");
 
    /* create a structure */
    jl_eval_string("at = bulk(:Si, cubic=true) * 3");
+   jl_eval_string("at.Z[:] .= AtomicNumber(8)");
+   jl_eval_string("at.Z[2:3:end] .= AtomicNumber(1)");
    jl_eval_string("rattle!(at, 0.1)");
 
    /* evaluate the energy on the structure */

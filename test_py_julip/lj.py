@@ -3,6 +3,7 @@ from ctypes import *
 from numpy.ctypeslib import ndpointer
 import numpy as np
 from time import time
+import random 
 
 def _cstr(str):
   return create_string_buffer(str.encode('utf-8'))
@@ -12,6 +13,10 @@ lib = cdll.LoadLibrary("./lj.so")
 julip_init = lib.julip_init 
 julip_init.restype = None
 julip_init.argtypes = [] 
+
+ace_init = lib.ace_init 
+ace_init.restype = None
+ace_init.argtypes = [] 
 
 julip_cleanup = lib.julip_cleanup 
 julip_cleanup.restype = None
@@ -24,6 +29,10 @@ julip_init_lj.argtypes = [c_char_p, ]
 julip_init_calculator = lib.init_calculator
 julip_init_calculator.restype = c_void_p
 julip_init_calculator.argtypes = [c_char_p, c_char_p] 
+
+julip_json_calculator = lib.json_calculator
+julip_json_calculator.restype = c_void_p
+julip_json_calculator.argtypes = [c_char_p, c_char_p]
 
 
 energy = lib.energy
@@ -47,13 +56,13 @@ forces.argtypes = [c_char_p,    # calculator id
 
 julip_init()
 
-# Julip calculator 
+# Julip calculator : Lennard Jones 
 ljid = "cace_ljcalc"
 ljid_c = _cstr(ljid)
-
-# julip_init_lj(ljid_c)
 julip_init_calculator(ljid_c, _cstr("LennardJones() * SplineCutoff(15.0, 20.0)"))
 
+
+# Python calculator 
 def pyLJ(r, eps, sigm):
   r_sc = (sigm / r)**6
   return 4 * eps * (r_sc**2 - r_sc)
@@ -102,6 +111,24 @@ print("Energy JuLIP: {0:.3f} in {1:.3f} seconds".format( C_E, t2 - t1))
 ### TEST FORCES
 forces(ljid_c, F, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
 print(F.reshape((Nats, 3)))
+
+
+##### TESTING LOADING AND EVALUATING OF AN ACE POTENTIAL 
+# Julip calculator : ACE 
+ace_init() 
+aceid = "cace_ace"
+aceid_c = _cstr(aceid)
+julip_json_calculator(aceid_c, _cstr("randpotHO.json"))
+
+# convert the species to H and O 
+for i in range(0, Nats-1):
+  if random.random() < 0.5:
+    Z[i] = 1
+  else:
+    Z[i] = 8
+
+Eace = energy(aceid_c, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+print("ACE Energy: ", Eace)
 
 
 julip_cleanup()

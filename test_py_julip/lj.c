@@ -8,47 +8,30 @@
 
 void println() { printf("\n"); }
 
+
 jl_function_t* _atoms_from_c; 
-
-jl_value_t* _cace_refs;
-jl_function_t* _setindex;
-jl_function_t* _delete;
-jl_datatype_t* _reft;
+jl_value_t* _energyfcn;
+jl_value_t *_forcefcn;
 
 
-void save_ref(jl_value_t* var) {
-   JL_GC_PUSH1(&var);
-   jl_value_t* rvar = jl_new_struct(_reft, var);
-   jl_call3(_setindex, _cace_refs, rvar, rvar);
-   JL_GC_POP();
+void ace_init() {
+   jl_eval_string("using ACE");
+   return; 
 }
-
-void delete_ref(jl_value_t* var) {
-   JL_GC_PUSH1(&var);
-   jl_value_t* rvar = jl_new_struct(_reft, var);
-   jl_call2(_delete, _cace_refs, rvar);
-   JL_GC_POP();
-}
-
-// jl_value_t *_calculators;
-
-// jl_value_t **_GC;
 
 void julip_init() {
    jl_init();
    jl_eval_string("using Pkg; Pkg.activate(\".\"); Pkg.instantiate(; verbose=true);");
    jl_eval_string("using JuLIP");
-   _cace_refs = jl_eval_string("__cace_refs__ = IdDict()");
-   _setindex = jl_get_function(jl_base_module, "setindex!");
-   _reft = (jl_datatype_t*)jl_eval_string("Base.RefValue{Any}");
-   _delete = jl_get_function(jl_base_module, "delete!");
    _atoms_from_c = jl_eval_string("(X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
-   // _calculators = jl_eval_string("Dict{String, Any}()")
+   _energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
+   _forcefcn = (jl_value_t*)jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
    return; 
 }
 
 void julip_cleanup() {
   jl_atexit_hook(0);
+  return; 
 }
 
 
@@ -64,11 +47,29 @@ void* init_calculator(char* idstr, char* initcmd) {
    return (void*) calc;
 }
 
-// void* load_calculator(char* idstr, char* fpath) {
-//    jl_value_t* calc = jl_eval_string(initcmd);
-//    jl_set_global(jl_main_module, jl_symbol(idstr), calc);
-//    return (void*) calc;
-// }
+void* json_calculator(char* idstr, char* fpath) {
+   char loadcmd[1000];
+   sprintf(loadcmd, "%s = read_dict( load_json(\"%s\") )", idstr, fpath);
+   printf("Loading Potential: `%s`\n", loadcmd);
+   jl_value_t* calc = jl_eval_string(loadcmd);
+   
+   // jl_value_t* calc = jl_eval_string("D = load_json(\"randpotHO.json\")");
+   
+   // if (jl_exception_occurred())
+   //     printf("%s \n", jl_typeof_str(jl_exception_occurred()));   
+
+   // jl_value_t* _display = (jl_value_t*)jl_get_function(jl_main_module, "display");
+   // jl_call1(_display, calc);
+
+   // jl_eval_string("display(D[\"__id__\"])"); println(); 
+   
+   // sprintf(loadcmd, "display(%s)", idstr);
+   // jl_eval_string(loadcmd);
+
+   // jl_set_global(jl_main_module, jl_symbol(idstr), calc);
+   return (void*) calc;
+   // return NULL; 
+}
 
 
 
@@ -112,17 +113,57 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
    jl_value_t** args; 
    JL_GC_PUSHARGS(args, 2);
 
+   char loadcmd[1000];
+   sprintf(loadcmd, "display(typeof(%s)); println()", calcid);
+   jl_eval_string(loadcmd);
+
+
    jl_value_t* calc = jl_eval_string(calcid);
    args[0] = calc; 
+
    jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
    args[1] = at;
 
-   jl_value_t *energyfcn = jl_get_function(jl_main_module, "energy");
-   jl_value_t* jlE = jl_call2(energyfcn, calc, at);   
+   jl_set_global(jl_main_module, jl_symbol("at"), at);
+
+   double E = 0.0; 
+   jl_value_t* jlE;
+   jlE = jl_call2(_energyfcn, calc, at);   
+   if (jl_exception_occurred()) {
+      printf("Exception at jl_call2(_energyfcn, calc, at) : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+
+      printf("Trying another way...");
+      // jlE = jl_eval_string("energy(cace_ace, at)");
+      // if (jl_exception_occurred()) {
+      //    printf("...failed again");
+      // } else {
+      //    E = unbox_float64(jlE); 
+      // }
+      jl_eval_string("D = load_json(\"randpotHO.json\"); V = read_dict(D)");
+      jl_eval_string("at = bulk(:Si, cubic=true) * 3");
+      jl_eval_string("at.Z[:] .= AtomicNumber(8)");
+      jl_eval_string("at.Z[2:3:end] .= AtomicNumber(1)");
+      jl_eval_string("rattle!(at, 0.1)");
+
+      /* evaluate the energy on the structure */
+      jl_value_t *jlE = jl_eval_string("energy(V, at)");
+      if (jl_exception_occurred()) {
+         printf("...failed again");
+      } else {
+         printf("... now it worked?! \n");
+         E = unbox_float64(jlE); 
+      }
+
+
+   } else {
+      E = unbox_float64(jlE); 
+   }
+
 
    JL_GC_POP();
 
-   return unbox_float64(jlE);
+   return E;
 }
 
 
@@ -134,14 +175,12 @@ void forces(char* calcid, double *F,
    jl_value_t** args; 
    JL_GC_PUSHARGS(args, 2);
 
-
    jl_value_t* calc = jl_eval_string(calcid);
    args[0] = calc; 
    jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
    args[1] = at;
 
-   jl_value_t *forcefcn = jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
-   jl_array_t* _F = (jl_array_t*)jl_call2(forcefcn, calc, at);
+   jl_array_t* _F = (jl_array_t*)jl_call2(_forcefcn, calc, at);
    double *Fdata = (double*)jl_array_data(_F);
    for (int i = 0; i < 3*Nat; i++) F[i] = Fdata[i];
 

@@ -6,6 +6,6 @@ void julip_cleanup();
 
 void* init_calculator(char* idstr, char* initcmd);
 
-// void ace_init(); 
+void ace_init(); 
 
-// void* load_calculator(char* idstr, char* fpath);
+void* json_calculator(char* idstr, char* fpath);
