@@ -14,13 +14,13 @@ julip_init = lib.julip_init
 julip_init.restype = None
 julip_init.argtypes = [] 
 
-ace_init = lib.ace_init 
-ace_init.restype = None
-ace_init.argtypes = [] 
-
 julip_cleanup = lib.julip_cleanup 
 julip_cleanup.restype = None
 julip_init.argtypes = [] 
+
+jl_eval_string = lib.jl_eval_string 
+jl_eval_string.restype = None
+jl_eval_string.argtypes = [c_char_p,]
 
 julip_init_lj = lib.init_lj 
 julip_init_lj.restype = c_void_p
@@ -84,9 +84,9 @@ positions = np.random.uniform(-5, 5, (Nats, 3))
 Z = np.zeros(Nats, dtype = "int32")
 pbc = np.zeros(3, dtype = "int32")
 cell = np.zeros(9)
-cell[0] = 5.0
-cell[4] = 5.0
-cell[8] = 5.0
+cell[0] = 10.0
+cell[4] = 10.0
+cell[8] = 10.0
 
 # WARMUP 
 
@@ -112,16 +112,15 @@ print("Energy JuLIP: {0:.3f} in {1:.3f} seconds".format( C_E, t2 - t1))
 forces(ljid_c, F, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
 print(F.reshape((Nats, 3)))
 
-
 ##### TESTING LOADING AND EVALUATING OF AN ACE POTENTIAL 
 # Julip calculator : ACE 
-ace_init() 
+jl_eval_string(_cstr("using ACE"))
 aceid = "cace_ace"
 aceid_c = _cstr(aceid)
 julip_json_calculator(aceid_c, _cstr("randpotHO.json"))
 
 # convert the species to H and O 
-for i in range(0, Nats-1):
+for i in range(0, Nats):
   if random.random() < 0.5:
     Z[i] = 1
   else:
@@ -130,5 +129,7 @@ for i in range(0, Nats-1):
 Eace = energy(aceid_c, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
 print("ACE Energy: ", Eace)
 
+Face = forces(aceid_c, F, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+print("ACE Forces: ", F)
 
 julip_cleanup()

@@ -14,11 +14,6 @@ jl_value_t* _energyfcn;
 jl_value_t *_forcefcn;
 
 
-void ace_init() {
-   jl_eval_string("using ACE");
-   return; 
-}
-
 void julip_init() {
    jl_init();
    jl_eval_string("using Pkg; Pkg.activate(\".\"); Pkg.instantiate(; verbose=true);");
@@ -113,11 +108,6 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
    jl_value_t** args; 
    JL_GC_PUSHARGS(args, 2);
 
-   char loadcmd[1000];
-   sprintf(loadcmd, "display(typeof(%s)); println()", calcid);
-   jl_eval_string(loadcmd);
-
-
    jl_value_t* calc = jl_eval_string(calcid);
    args[0] = calc; 
 
@@ -132,40 +122,15 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
    if (jl_exception_occurred()) {
       printf("Exception at jl_call2(_energyfcn, calc, at) : %s \n", 
              jl_typeof_str(jl_exception_occurred()));
-
-      printf("Trying another way...");
-      // jlE = jl_eval_string("energy(cace_ace, at)");
-      // if (jl_exception_occurred()) {
-      //    printf("...failed again");
-      // } else {
-      //    E = unbox_float64(jlE); 
-      // }
-      // jl_eval_string("D = load_json(\"randpotHO.json\"); V = read_dict(D)");
-      jl_eval_string("at = bulk(:Si, cubic=true) * 3");
-      jl_eval_string("at.Z[:] .= AtomicNumber(8)");
-      jl_eval_string("at.Z[2:3:end] .= AtomicNumber(1)");
-      jl_eval_string("rattle!(at, 0.1)");
-
-      /* evaluate the energy on the structure */
-      jl_value_t *jlE = jl_eval_string("energy(cace_ace, at)");
-      if (jl_exception_occurred()) {
-         printf("...failed again");
-      } else {
-         printf("... now it worked?! \n");
-         E = unbox_float64(jlE); 
-      }
-
-
+      printf("Returning 0, but should throw an error here.");
    } else {
       E = unbox_float64(jlE); 
    }
-
 
    JL_GC_POP();
 
    return E;
 }
-
 
 
 
