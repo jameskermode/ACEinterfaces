@@ -1,7 +1,7 @@
 import ase
 from ase.build import molecule
 import numpy as np 
-import acecalc
+import ace
 
 water = molecule("H2O")
 
@@ -11,7 +11,7 @@ X = water.get_positions() + 1
 water.set_positions(X)
 water.set_cell(2 * np.ones(3))
 
-cace_calc = acecalc.ACECalculator(jsonpath="randpotHO.json")
+cace_calc = ace.ACECalculator(jsonpath="../assets/randpotHO.json")
 
 water.set_calculator(cace_calc)
 

@@ -3,7 +3,7 @@
 #include <math.h>
 #include <julia.h>
 
-#include "ace.h"
+#include "ace_c.h"
 
 void println() { printf("\n"); }
 

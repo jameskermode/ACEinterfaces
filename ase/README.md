@@ -10,8 +10,8 @@ This folder contains:
 1. Compile the C interface, modifying the following commands as suitable: 
 ```
 export JULIA_DIR=/Users/ortner/gits/julia17/usr
-gcc -fPIC -c ace.c -I$JULIA_DIR/include/julia 
-gcc ace.o -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib -ljulia -shared -o ace.so
+gcc -fPIC -c ace_c.c -I$JULIA_DIR/include/julia 
+gcc ace_c.o -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib -ljulia -shared -o ace_c.so
 ```
 
 2. Try it out

@@ -21,7 +21,7 @@ class ACECalculator(Calculator):
                jsonpath = None, 
                calcid = "__ase_calc__"):
     Calculator.__init__(self)
-    self.lib = cdll.LoadLibrary("./ace.so")
+    self.lib = cdll.LoadLibrary("./ace_c.so")
 
     self.ace_init = self.lib.ace_init 
     self.ace_init.restype = None
