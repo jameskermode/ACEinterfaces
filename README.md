@@ -1,6 +1,4 @@
 
-Compile using some suitable variant of 
-```
-export JULIA_DIR=/Users/ortner/gits/julia16/usr
-gcc -o test -fPIC -I$JULIA_DIR/include/julia -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib test.c -ljulia
-```
+# ACE Interfaces for ACE v0.8.x
+
+Currently this only implements an ASE interface for testing purposes, but we will add more interfaces over time. Please look at the README file in `./ase` to get started.
