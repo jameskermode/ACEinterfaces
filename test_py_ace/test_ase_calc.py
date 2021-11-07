@@ -1,10 +1,10 @@
 import ase
 from ase.build import molecule
-import ACE_ASE
+import ace
 
 water = molecule("H2O")
 
-cace_calc = ACE_ASE.CACECalculator()
+cace_calc = ace.ACECalculator(jsonpath="randpotHO.json")
 
 water.set_calculator(cace_calc)
 

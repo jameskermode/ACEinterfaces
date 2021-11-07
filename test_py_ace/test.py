@@ -8,32 +8,19 @@ import random
 def _cstr(str):
   return create_string_buffer(str.encode('utf-8'))
 
-lib = cdll.LoadLibrary("./lj.so")
+lib = cdll.LoadLibrary("./ace.so")
 
-julip_init = lib.julip_init 
-julip_init.restype = None
-julip_init.argtypes = [] 
+ace_init = lib.ace_init 
+ace_init.restype = None
+ace_init.argtypes = [] 
 
-julip_cleanup = lib.julip_cleanup 
-julip_cleanup.restype = None
-julip_init.argtypes = [] 
+ace_cleanup = lib.ace_cleanup 
+ace_cleanup.restype = None
+ace_init.argtypes = [] 
 
 jl_eval_string = lib.jl_eval_string 
 jl_eval_string.restype = None
 jl_eval_string.argtypes = [c_char_p,]
-
-julip_init_lj = lib.init_lj 
-julip_init_lj.restype = c_void_p
-julip_init_lj.argtypes = [c_char_p, ] 
-
-julip_init_calculator = lib.init_calculator
-julip_init_calculator.restype = c_void_p
-julip_init_calculator.argtypes = [c_char_p, c_char_p] 
-
-julip_json_calculator = lib.json_calculator
-julip_json_calculator.restype = c_void_p
-julip_json_calculator.argtypes = [c_char_p, c_char_p]
-
 
 energy = lib.energy
 energy.restype = c_double
@@ -54,12 +41,40 @@ forces.argtypes = [c_char_p,    # calculator id
                    ndpointer(c_int32, flags="C_CONTIGUOUS"),    # pbc 
                    c_int ]
 
-julip_init()
+def _cstr(str):
+  return create_string_buffer(str.encode('utf-8'))
+
+def julia_eval(str):
+  jl_eval_string(_cstr(str))
+  
+
+def eval_energy(calc_id, X, Z, cell, pbc):
+  Nats = len(Z)
+  E = energy(_cstr(calc_id), X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+  return E 
+
+def eval_forces(calc_id, X, Z, cell, pbc):
+  Nats = len(Z)
+  Fs = np.zeros((Nats, 3)).flatten()
+  forces(_cstr(calc_id), Fs, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+  return Fs.reshape((Nats, 3))
+
+def init_calc(calcid, initcmd = None, jsonpath = None):
+  if initcmd != None and jsonpath == None: 
+    cmd = calcid + " = " + initcmd
+  elif jsonpath != None and initcmd == None: 
+    cmd = calcid + " = read_dict( load_json(\"" + jsonpath + "\"))"
+  else:
+    print("exactly one of jsonpath and initcmd must be provided")
+    # TODO: throw an exception 
+  print("Loading potential: " + cmd)
+  julia_eval(cmd)
+
+
+ace_init()
 
 # Julip calculator : Lennard Jones 
-ljid = "cace_ljcalc"
-ljid_c = _cstr(ljid)
-julip_init_calculator(ljid_c, _cstr("LennardJones() * SplineCutoff(15.0, 20.0)"))
+init_calc("cace_lj", initcmd = "LennardJones() * SplineCutoff(15.0, 20.0)")
 
 
 # Python calculator 
@@ -88,36 +103,27 @@ cell[0] = 10.0
 cell[4] = 10.0
 cell[8] = 10.0
 
-# WARMUP 
+# WARMUP  
+eval_energy("cace_lj", positions, Z, cell, pbc)
+F = eval_forces("cace_lj", positions, Z, cell, pbc)
 
-# warmup 
-energy(ljid_c, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
-F = np.empty((Nats, 3)).flatten()
-forces(ljid_c, F, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
-
-
-
-# print(positions)
-# print(positions.flatten())
 t0 = time()
 pyE = py_energy(positions, Nats)
 t1 = time()
-C_E = energy(ljid_c, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+C_E = eval_energy("cace_lj", positions, Z, cell, pbc)
 t2 = time()
 
 print("Energy Python: {0:.3f} in {1:.3f} seconds".format( pyE, t1 - t0))
 print("Energy JuLIP: {0:.3f} in {1:.3f} seconds".format( C_E, t2 - t1))
 
 ### TEST FORCES
-forces(ljid_c, F, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
-print(F.reshape((Nats, 3)))
+F = eval_forces("cace_lj", positions, Z, cell, pbc)
+print(F)
 
 ##### TESTING LOADING AND EVALUATING OF AN ACE POTENTIAL 
 # Julip calculator : ACE 
-jl_eval_string(_cstr("using ACE"))
 aceid = "cace_ace"
-aceid_c = _cstr(aceid)
-julip_json_calculator(aceid_c, _cstr("randpotHO.json"))
+init_calc(aceid, jsonpath = "randpotHO.json")
 
 # convert the species to H and O 
 for i in range(0, Nats):
@@ -126,10 +132,10 @@ for i in range(0, Nats):
   else:
     Z[i] = 8
 
-Eace = energy(aceid_c, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+Eace = eval_energy(aceid, positions, Z, cell, pbc)
 print("ACE Energy: ", Eace)
 
-Face = forces(aceid_c, F, positions.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
-print("ACE Forces: ", F)
+Face = eval_forces(aceid, positions, Z, cell, pbc)
+print("ACE Forces: ", Face)
 
-julip_cleanup()
+ace_cleanup()
