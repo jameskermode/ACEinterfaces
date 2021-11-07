@@ -23,19 +23,19 @@ class ACECalculator(Calculator):
     Calculator.__init__(self)
     self.lib = cdll.LoadLibrary("./ace.so")
 
-    self.ace_init = lib.ace_init 
+    self.ace_init = self.lib.ace_init 
     self.ace_init.restype = None
     self.ace_init.argtypes = [] 
 
-    self.ace_cleanup = lib.ace_cleanup 
+    self.ace_cleanup = self.lib.ace_cleanup 
     self.ace_cleanup.restype = None
     self.ace_init.argtypes = [] 
 
-    self.jl_eval_string = lib.jl_eval_string 
+    self.jl_eval_string = self.lib.jl_eval_string 
     self.jl_eval_string.restype = None
     self.jl_eval_string.argtypes = [c_char_p,]
 
-    self.energy = lib.energy
+    self.energy = self.lib.energy
     self.energy.restype = c_double
     self.energy.argtypes = [c_char_p,    # calculator id 
                       ndpointer(c_double, flags="C_CONTIGUOUS"),   # positions 
@@ -44,7 +44,7 @@ class ACECalculator(Calculator):
                       ndpointer(c_int32, flags="C_CONTIGUOUS"),    # pbc 
                       c_int ]
 
-    self.forces = lib.forces
+    self.forces = self.lib.forces
     self.forces.restype = None
     self.forces.argtypes = [c_char_p,    # calculator id 
                       ndpointer(c_double, flags="C_CONTIGUOUS"),   # forces 
@@ -54,28 +54,28 @@ class ACECalculator(Calculator):
                       ndpointer(c_int32, flags="C_CONTIGUOUS"),    # pbc 
                       c_int ]
 
-    self.init_calc(calcid, initcmd=initcmd, jsonpath=jsonpath)
+    self.init_calc(calcid, initcmd, jsonpath)
 
-  def _cstr(str):
+  def _cstr(self, str):
     return create_string_buffer(str.encode('utf-8'))
 
-  def julia_eval(str):
-    jl_eval_string(_cstr(str))
+  def julia_eval(self, str):
+    self.jl_eval_string(self._cstr(str))
 
-  def eval_energy(X, Z, cell, pbc):
+  def eval_energy(self, X, Z, cell, pbc):
     Nats = len(Z)
-    E = energy(self.calcid_c, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+    E = self.energy(self.calcid_c, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
     return E 
 
-  def eval_forces(calc_id, X, Z, cell, pbc):
+  def eval_forces(self, calc_id, X, Z, cell, pbc):
     Nats = len(Z)
     Fs = np.zeros((Nats, 3)).flatten()
-    forces(self.calcid_c, Fs, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+    self.forces(self.calcid_c, Fs, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
     return Fs.reshape((Nats, 3))
 
-  def init_calc(calcid, initcmd = None, jsonpath = None):
+  def init_calc(self, calcid, initcmd, jsonpath):
     self.calcid = calcid 
-    self.calcid_c = _cstr(calcid)
+    self.calcid_c = self._cstr(calcid)
     if initcmd != None and jsonpath == None: 
       cmd = calcid + " = " + initcmd
     elif jsonpath != None and initcmd == None: 
@@ -84,7 +84,7 @@ class ACECalculator(Calculator):
       print("exactly one of jsonpath and initcmd must be provided")
       # TODO: throw an exception 
     print("Loading potential: " + cmd)
-    julia_eval(cmd)
+    self.julia_eval(cmd)
 
   
   def calculate(self, atoms, properties, system_changes):
@@ -96,6 +96,6 @@ class ACECalculator(Calculator):
     Nats = len(atoms)
     self.results = {}
     if 'energy' in properties:
-      self.results["energy"] = self.eval_energy(positions, Z, cell, pbc, Nats):
+      self.results["energy"] = self.eval_energy(positions, Z, cell, pbc, Nats)
     if 'forces' in properties:
-      self.results['forces'] = self.eval_forces(positions, Z, cell, pbc, Nats):
+      self.results['forces'] = self.eval_forces(positions, Z, cell, pbc, Nats)

@@ -5,8 +5,6 @@
 
 #include "ace.h"
 
-
-
 void println() { printf("\n"); }
 
 jl_function_t* _atoms_from_c; 

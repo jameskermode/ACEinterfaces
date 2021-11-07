@@ -2,8 +2,8 @@
 To compile do 
 ```
 export JULIA_DIR=/Users/ortner/gits/julia17/usr
-gcc -fPIC -c lj.c -I$JULIA_DIR/include/julia 
-gcc lj.o -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib -ljulia -shared -o lj.so
+gcc -fPIC -c ace.c -I$JULIA_DIR/include/julia 
+gcc ace.o -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib -ljulia -shared -o ace.so
 ```
 
 `ace.py` contains an example implementation of an ASE calculator calling a C function
