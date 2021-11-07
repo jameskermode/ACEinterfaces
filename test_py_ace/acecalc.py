@@ -54,6 +54,7 @@ class ACECalculator(Calculator):
                       ndpointer(c_int32, flags="C_CONTIGUOUS"),    # pbc 
                       c_int ]
 
+    self.ace_init() 
     self.init_calc(calcid, initcmd, jsonpath)
 
   def _cstr(self, str):
@@ -62,12 +63,21 @@ class ACECalculator(Calculator):
   def julia_eval(self, str):
     self.jl_eval_string(self._cstr(str))
 
+  def convert_atoms(self, atoms):
+    Nat = len(atoms)
+    X = atoms.get_positions().astype("float64")
+    Z = atoms.get_atomic_numbers().astype("int32")
+    cell = atoms.get_cell().astype("float64")
+    pbc = atoms.get_pbc().astype("int32")
+    return X, Z, cell, pbc 
+
+
   def eval_energy(self, X, Z, cell, pbc):
     Nats = len(Z)
     E = self.energy(self.calcid_c, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
     return E 
 
-  def eval_forces(self, calc_id, X, Z, cell, pbc):
+  def eval_forces(self, X, Z, cell, pbc):
     Nats = len(Z)
     Fs = np.zeros((Nats, 3)).flatten()
     self.forces(self.calcid_c, Fs, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
@@ -89,13 +99,9 @@ class ACECalculator(Calculator):
   
   def calculate(self, atoms, properties, system_changes):
     Calculator.calculate(self, atoms, properties, system_changes)
-    X = atoms.get_positions()
-    cell = atoms.get_cell()
-    Z = atoms.get_atomic_numbers().astype("int32")
-    pbc = atoms.get_pbc().astype("int32")
-    Nats = len(atoms)
+    X, Z, cell, pbc = self.convert_atoms(atoms)
     self.results = {}
     if 'energy' in properties:
-      self.results["energy"] = self.eval_energy(positions, Z, cell, pbc, Nats)
+      self.results["energy"] = self.eval_energy(X, Z, cell, pbc)
     if 'forces' in properties:
-      self.results['forces'] = self.eval_forces(positions, Z, cell, pbc, Nats)
+      self.results['forces'] = self.eval_forces(X, Z, cell, pbc)
