@@ -20,5 +20,3 @@ gcc ace_c.o -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib -ljulia -shared -o ace_c.
 ```
 python test_ase_calc.py
 ```
-
-TODO: probably needs an installation script `setup.py`?
