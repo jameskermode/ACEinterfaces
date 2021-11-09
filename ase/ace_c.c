@@ -10,6 +10,7 @@ void println() { printf("\n"); }
 jl_function_t* _atoms_from_c; 
 jl_value_t* _energyfcn;
 jl_value_t *_forcefcn;
+jl_value_t *_stressfcn;
 
 
 void ace_init() {
@@ -19,6 +20,7 @@ void ace_init() {
    _atoms_from_c = jl_eval_string("(X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
    _energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
    _forcefcn = (jl_value_t*)jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
+   _stressfcn = (jl_value_t*)jl_eval_string("(calc, at) -> vcat(stress(calc, at)...)");
    return; 
 }
 
@@ -109,6 +111,27 @@ void forces(char* calcid, double *F,
    jl_array_t* _F = (jl_array_t*)jl_call2(_forcefcn, calc, at);
    double *Fdata = (double*)jl_array_data(_F);
    for (int i = 0; i < 3*Nat; i++) F[i] = Fdata[i];
+
+   JL_GC_POP();
+
+   return; 
+}
+
+
+void stress(char* calcid, double *S, 
+              double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
+  
+   jl_value_t** args; 
+   JL_GC_PUSHARGS(args, 2);
+
+   jl_value_t* calc = jl_eval_string(calcid);
+   args[0] = calc; 
+   jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
+   args[1] = at;
+
+   jl_array_t* _S = (jl_array_t*)jl_call2(_stressfcn, calc, at);
+   double *Sdata = (double*)jl_array_data(_S);
+   for (int i = 0; i < 9; i++) S[i] = Sdata[i];
 
    JL_GC_POP();
 

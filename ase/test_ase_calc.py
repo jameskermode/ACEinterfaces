@@ -24,3 +24,8 @@ print(water.get_potential_energy())
 print("TEST force call")
 print(water.get_forces())
 
+water = water * [2, 2, 2]
+water.pbc = [True, True, True]
+water.set_calculator(cace_calc)
+print("TEST stress call")
+print(water.get_stress())

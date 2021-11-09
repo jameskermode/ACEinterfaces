@@ -1,6 +1,7 @@
 
 import numpy as np
 from ase.calculators.calculator import Calculator
+from ase.constraints import full_3x3_to_voigt_6_stress
 from ctypes import *
 from numpy.ctypeslib import ndpointer
 
@@ -10,7 +11,7 @@ class ACECalculator(Calculator):
   ASE compatible calculator of C-LJ potential
   """
 
-  implemented_properties = ['forces', 'energy']
+  implemented_properties = ['forces', 'energy', 'stress']
   
   default_parameters = {}
   
@@ -53,6 +54,16 @@ class ACECalculator(Calculator):
                       ndpointer(c_double, flags="C_CONTIGUOUS"),   # cell 
                       ndpointer(c_int32, flags="C_CONTIGUOUS"),    # pbc 
                       c_int ]
+    
+    self.stress = self.lib.stress
+    self.stress.restype = None
+    self.stress.argtypes = [c_char_p,    # calculator id 
+                      ndpointer(c_double, flags="C_CONTIGUOUS"),   # stress 
+                      ndpointer(c_double, flags="C_CONTIGUOUS"),   # positions 
+                      ndpointer(c_int32, flags="C_CONTIGUOUS"),    # Z
+                      ndpointer(c_double, flags="C_CONTIGUOUS"),   # cell 
+                      ndpointer(c_int32, flags="C_CONTIGUOUS"),    # pbc 
+                      c_int ]
 
     self.ace_init() 
     self.init_calc(calcid, initcmd, jsonpath)
@@ -83,6 +94,12 @@ class ACECalculator(Calculator):
     self.forces(self.calcid_c, Fs, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
     return Fs.reshape((Nats, 3))
 
+  def eval_stress(self, X, Z, cell, pbc):
+    Nats = len(Z)
+    S = np.zeros((9)).flatten()
+    self.stress(self.calcid_c, S, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
+    return full_3x3_to_voigt_6_stress(S.reshape((3, 3)))
+
   def init_calc(self, calcid, initcmd, jsonpath):
     self.calcid = calcid 
     self.calcid_c = self._cstr(calcid)
@@ -105,3 +122,5 @@ class ACECalculator(Calculator):
       self.results["energy"] = self.eval_energy(X, Z, cell, pbc)
     if 'forces' in properties:
       self.results['forces'] = self.eval_forces(X, Z, cell, pbc)
+    if 'stress' in properties:
+      self.results['stress'] = self.eval_stress(X, Z, cell, pbc)
