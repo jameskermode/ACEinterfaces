@@ -3,7 +3,7 @@ using ACE
 
 ##
 
-# create random potential
+# create random OH potential
 B = ACE.Utils.rpi_basis(; species = [:H, :O], N = 3)
 V = ACE.Random.randcombine(B; diff=2)
 D = write_dict(V)
