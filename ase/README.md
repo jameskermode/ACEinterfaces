@@ -1,8 +1,8 @@
 ## Instructions ACE ASE Interface 
 
-This folder contains: 
+This folder contains an ASE calculator to evaluate `ACE.jl` potentials from python : 
 * `ace/ace_c.h` and `ace/ace_c.c` : the C interface layer 
-* `ace/ase.py` : the python package wrapping the C interface 
+* `ace/ase.py` : the python ASE calculator wrapping the C interface 
 * `test_ase_calc.py` : a short test code
 
 ## Installation 
@@ -21,4 +21,14 @@ where `/PATH/TO/JULIA/FOLDER` refers to something like `/home/cdt1906/Applicatio
 3. Try it out
 ```
 python test_ase_calc.py
+```
+
+
+## Example usage
+see `test_ase_calc.py`
+
+short example:
+```
+import ace
+ace_calc = ace.ACECalculator(jsonpath="../assets/CH_ace_test.json")
 ```
