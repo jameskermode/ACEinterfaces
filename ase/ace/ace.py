@@ -82,7 +82,7 @@ class ACECalculator(Calculator):
     Nat = len(atoms)
     X = atoms.get_positions().astype("float64")
     Z = atoms.get_atomic_numbers().astype("int32")
-    cell = atoms.get_cell().astype("float64")
+    cell = atoms.get_cell().T.astype("float64")
     pbc = atoms.get_pbc().astype("int32")
     return X, Z, cell, pbc 
 
