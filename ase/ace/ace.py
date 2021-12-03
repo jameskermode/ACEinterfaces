@@ -20,7 +20,8 @@ class ACECalculator(Calculator):
   def __init__(self, 
                initcmd = None, 
                jsonpath = None, 
-               calcid = "__ase_calc__"):
+               calcid = "__ase_calc__",
+               standard_eval=False):
     Calculator.__init__(self)
     basedir = os.path.abspath(os.path.dirname(__file__))
     calc_path = os.path.join(basedir, 'ace_c.so')
@@ -70,7 +71,7 @@ class ACECalculator(Calculator):
                       c_int ]
 
     self.ace_init() 
-    self.init_calc(calcid, initcmd, jsonpath)
+    self.init_calc(calcid, initcmd, jsonpath, standard_eval)
 
   def _cstr(self, str):
     return create_string_buffer(str.encode('utf-8'))
@@ -104,13 +105,17 @@ class ACECalculator(Calculator):
     self.stress(self.calcid_c, S, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
     return full_3x3_to_voigt_6_stress(S.reshape((3, 3)))
 
-  def init_calc(self, calcid, initcmd, jsonpath):
+  def init_calc(self, calcid, initcmd, jsonpath, standard_eval=False):
     self.calcid = calcid 
     self.calcid_c = self._cstr(calcid)
-    if initcmd != None and jsonpath == None: 
+    assert os.path.exists(jsonpath), "Potential file not found"
+    if initcmd != None and jsonpath == None and standard_eval == False: 
       cmd = calcid + " = " + initcmd
-    elif jsonpath != None and initcmd == None: 
+    elif jsonpath != None and initcmd == None and standard_eval == False: 
       cmd = calcid + " = read_dict( load_dict(\"" + jsonpath + "\")[\"IP\"])"
+    elif jsonpath != None and initcmd == None and standard_eval == True: 
+      cmd = calcid + " = read_dict( load_dict(\"" + jsonpath + "\")[\"IP\"]); "
+      cmd += calcid + "=  JuLIP.MLIPs.SumIP({0}.components[1], {0}.components[2], standardevaluator({0}.components[3]))".format(calcid)
     else:
       print("exactly one of jsonpath and initcmd must be provided")
       # TODO: throw an exception 
