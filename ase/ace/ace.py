@@ -11,7 +11,7 @@ class ACECalculator(Calculator):
   ASE compatible calculator of ACE
   """
 
-  implemented_properties = ['forces', 'energy', 'stress']
+  implemented_properties = ['forces', 'energy', 'free_energy', 'stress']
   
   default_parameters = {}
   
@@ -128,7 +128,9 @@ class ACECalculator(Calculator):
     X, Z, cell, pbc = self.convert_atoms(atoms)
     self.results = {}
     if 'energy' in properties:
-      self.results["energy"] = self.eval_energy(X, Z, cell, pbc)
+      E = self.eval_energy(X, Z, cell, pbc)
+      self.results['energy'] = E
+      self.results['free_energy'] = E
     if 'forces' in properties:
       self.results['forces'] = self.eval_forces(X, Z, cell, pbc)
     if 'stress' in properties:
