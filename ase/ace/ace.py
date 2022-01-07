@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 import os
 from ase.calculators.calculator import Calculator
 from ase.constraints import full_3x3_to_voigt_6_stress
@@ -21,7 +22,8 @@ class ACECalculator(Calculator):
                initcmd = None, 
                jsonpath = None, 
                calcid = "__ase_calc__",
-               standard_eval=False):
+               standard_eval=False,
+               verbose=False):
     Calculator.__init__(self)
     basedir = os.path.abspath(os.path.dirname(__file__))
     calc_path = os.path.join(basedir, 'ace_c.so')
@@ -71,7 +73,7 @@ class ACECalculator(Calculator):
                       c_int ]
 
     self.ace_init() 
-    self.init_calc(calcid, initcmd, jsonpath, standard_eval)
+    self.init_calc(calcid, initcmd, jsonpath, standard_eval, verbose=verbose)
 
   def _cstr(self, str):
     return create_string_buffer(str.encode('utf-8'))
@@ -105,7 +107,7 @@ class ACECalculator(Calculator):
     self.stress(self.calcid_c, S, X.flatten(), Z.flatten(), cell.flatten(), pbc.flatten(), Nats)
     return full_3x3_to_voigt_6_stress(S.reshape((3, 3)))
 
-  def init_calc(self, calcid, initcmd, jsonpath, standard_eval=False):
+  def init_calc(self, calcid, initcmd, jsonpath, standard_eval=False, verbose=False):
     self.calcid = calcid 
     self.calcid_c = self._cstr(calcid)
     assert os.path.exists(jsonpath), "Potential file not found"
@@ -117,9 +119,9 @@ class ACECalculator(Calculator):
       cmd = calcid + " = read_dict( load_dict(\"" + jsonpath + "\")[\"IP\"]); "
       cmd += calcid + "=  JuLIP.MLIPs.SumIP({0}.components[1], {0}.components[2], standardevaluator({0}.components[3]))".format(calcid)
     else:
-      print("exactly one of jsonpath and initcmd must be provided")
-      # TODO: throw an exception 
-    print("Loading potential: " + cmd)
+      raise ValueError("exactly one of jsonpath and initcmd must be provided")
+    if verbose:
+        sys.stderr.write(f"Loading potential: {cmd}\n")
     self.julia_eval(cmd)
 
   
