@@ -129,7 +129,7 @@ class ACECalculator(Calculator):
     Calculator.calculate(self, atoms, properties, system_changes)
     X, Z, cell, pbc = self.convert_atoms(atoms)
     self.results = {}
-    if 'energy' in properties:
+    if 'energy' in properties or 'free_energy' in properties:
       E = self.eval_energy(X, Z, cell, pbc)
       self.results['energy'] = E
       self.results['free_energy'] = E
