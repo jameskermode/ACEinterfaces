@@ -13,15 +13,23 @@ jl_value_t *_forcefcn;
 jl_value_t *_stressfcn;
 
 
-void ace_init() {
+int ace_init(int32_t ACE_version) {
    jl_init();
    // jl_eval_string("using Pkg; Pkg.activate(\"../.\"); Pkg.instantiate(; verbose=true);");
-   jl_eval_string("using JuLIP, ACE");
+   if (ACE_version == 1)
+   {
+      jl_eval_string("using JuLIP, ACE1");
+   }else if (ACE_version == 2)
+   {
+      jl_eval_string("using JuLIP, ACE");
+   }else 
+      return 1;
+   
    _atoms_from_c = jl_eval_string("(X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
    _energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
    _forcefcn = (jl_value_t*)jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
    _stressfcn = (jl_value_t*)jl_eval_string("(calc, at) -> vcat(stress(calc, at)...)");
-   return; 
+   return 0; 
 }
 
 void ace_cleanup() {

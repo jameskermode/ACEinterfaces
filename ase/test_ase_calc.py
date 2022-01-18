@@ -3,7 +3,7 @@ import ace
 
 at = read("../assets/ch_test2.xyz")
 
-cace_calc = ace.ACECalculator(jsonpath="../assets/CH_ace_test.json")
+cace_calc = ace.ACECalculator(jsonpath="../assets/CH_ace_test.json", ACE_version=1)
 
 at.set_calculator(cace_calc)
 

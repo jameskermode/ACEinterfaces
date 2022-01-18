@@ -22,6 +22,7 @@ class ACECalculator(Calculator):
                initcmd = None, 
                jsonpath = None, 
                calcid = "__ase_calc__",
+               ACE_version = 1,
                standard_eval=False,
                verbose=False):
     Calculator.__init__(self)
@@ -32,8 +33,8 @@ class ACECalculator(Calculator):
     self.lib = cdll.LoadLibrary(calc_path)
 
     self.ace_init = self.lib.ace_init 
-    self.ace_init.restype = None
-    self.ace_init.argtypes = [] 
+    self.ace_init.restype = c_int32
+    self.ace_init.argtypes = [c_int32, ]
 
     self.ace_cleanup = self.lib.ace_cleanup 
     self.ace_cleanup.restype = None
@@ -72,7 +73,9 @@ class ACECalculator(Calculator):
                       ndpointer(c_int32, flags="C_CONTIGUOUS"),    # pbc 
                       c_int ]
 
-    self.ace_init() 
+    ret = self.ace_init(c_int32(ACE_version))  # initialise Julia environment
+    if ret == 1:  # check if initialization is successful
+      raise NameError("Invalid ACE version, should be integer 1 or 2")
     self.init_calc(calcid, initcmd, jsonpath, standard_eval, verbose=verbose)
 
   def _cstr(self, str):
