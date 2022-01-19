@@ -117,9 +117,9 @@ class ACECalculator(Calculator):
     if initcmd != None and jsonpath == None and standard_eval == False: 
       cmd = calcid + " = " + initcmd
     elif jsonpath != None and initcmd == None and standard_eval == False: 
-      cmd = calcid + " = read_dict( load_dict(\"" + jsonpath + "\")[\"IP\"])"
+      cmd = calcid + " = read_dict( load_dict(\"" + str(jsonpath) + "\")[\"IP\"])"
     elif jsonpath != None and initcmd == None and standard_eval == True: 
-      cmd = calcid + " = read_dict( load_dict(\"" + jsonpath + "\")[\"IP\"]); "
+      cmd = calcid + " = read_dict( load_dict(\"" + str(jsonpath) + "\")[\"IP\"]); "
       cmd += calcid + "=  JuLIP.MLIPs.SumIP({0}.components[1], {0}.components[2], standardevaluator({0}.components[3]))".format(calcid)
     else:
       raise ValueError("exactly one of jsonpath and initcmd must be provided")
