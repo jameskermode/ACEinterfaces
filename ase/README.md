@@ -14,7 +14,7 @@ export JULIA_DIR=/PATH/TO/JULIA/FOLDER
 gcc -fPIC -c ace_c.c -I$JULIA_DIR/include/julia 
 gcc ace_c.o -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib -ljulia -shared -o ace_c.so
 ```
-where `/PATH/TO/JULIA/FOLDER` refers to something like `/home/cdt1906/Applications/julia-1.6.1` (the main folder of julia, not the `bin` folder of the julia executable)
+where `/PATH/TO/JULIA/FOLDER` refers to something like `~/Applications/julia-1.6.1` (the main folder of julia, not the `bin` folder of the julia executable)
 
 2. Run `python setup.py install`
 
