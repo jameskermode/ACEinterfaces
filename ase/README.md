@@ -30,5 +30,5 @@ see `test_ase_calc.py`
 short example:
 ```
 import ace
-ace_calc = ace.ACECalculator(jsonpath="../assets/CH_ace_test.json", ACEversion=1)
+ace_calc = ace.ACECalculator(jsonpath="../assets/CH_ace_test.json", ACE_version=1)
 ```
