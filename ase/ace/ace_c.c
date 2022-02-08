@@ -24,11 +24,24 @@ int ace_init(int32_t ACE_version) {
       jl_eval_string("using JuLIP, ACE");
    }else 
       return 1;
+
+   if (jl_exception_occurred()) {
+      printf("Exception at initialization: %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    
    _atoms_from_c = jl_eval_string("(X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
+   if (jl_exception_occurred()) {
+      printf("Exception at defining _atoms_from_c: %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    _energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
    _forcefcn = (jl_value_t*)jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
    _stressfcn = (jl_value_t*)jl_eval_string("(calc, at) -> vcat(stress(calc, at)...)");
+   if (jl_exception_occurred()) {
+      printf("Exception at defining _energy, _force etc. : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    return 0; 
 }
 
@@ -52,6 +65,11 @@ jl_value_t* atoms_from_c(double* X,
    jl_array_t* _bc = jl_alloc_array_1d(jl_int32, 3);
    jl_array_t* _Z = jl_alloc_array_1d(jl_int32, Nat);
 
+   if (jl_exception_occurred()) {
+      printf("Exception at Allocation in atoms_from_c : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
+
    double *XData = (double*)jl_array_data(_X);
    for (int i = 0; i < 3*Nat; i++) XData[i] = X[i];
    double *cellData = (double*)jl_array_data(_cell);
@@ -62,6 +80,10 @@ jl_value_t* atoms_from_c(double* X,
    for (int i = 0; i < Nat; i++) ZData[i] = Z[i]; 
 
    jl_value_t* at_args[] = {(jl_value_t*)_X, (jl_value_t*)_Z, (jl_value_t*)_cell, (jl_value_t*)_bc};   
+   if (jl_exception_occurred()) {
+      printf("Exception at creating arguments at atoms_from_c : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    return jl_call(_atoms_from_c, at_args, 4);
 }
 
@@ -77,18 +99,46 @@ double unbox_float64(jl_value_t* jlval) {
 double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
 
    jl_value_t** args; 
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 1 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    JL_GC_PUSHARGS(args, 2);
-
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 2 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    jl_value_t* calc = jl_eval_string(calcid);
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 3 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    args[0] = calc; 
-
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 4 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 5 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    args[1] = at;
-
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 6 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    jl_set_global(jl_main_module, jl_symbol("at"), at);
-
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 7 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    double E = 0.0; 
    jl_value_t* jlE;
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 8 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    jlE = jl_call2(_energyfcn, calc, at);   
    if (jl_exception_occurred()) {
       printf("Exception at jl_call2(_energyfcn, calc, at) : %s \n", 
@@ -99,7 +149,10 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
    }
 
    JL_GC_POP();
-
+   if (jl_exception_occurred()) {
+      printf("Exception at energy 9 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    return E;
 }
 
@@ -109,19 +162,44 @@ void forces(char* calcid, double *F,
               double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
   
    jl_value_t** args; 
+   if (jl_exception_occurred()) {
+      printf("Exception at force 1 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    JL_GC_PUSHARGS(args, 2);
-
+   if (jl_exception_occurred()) {
+      printf("Exception at force 2 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    jl_value_t* calc = jl_eval_string(calcid);
+   if (jl_exception_occurred()) {
+      printf("Exception at force 3 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    args[0] = calc; 
    jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
+   if (jl_exception_occurred()) {
+      printf("Exception at force 4 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    args[1] = at;
 
    jl_array_t* _F = (jl_array_t*)jl_call2(_forcefcn, calc, at);
+   if (jl_exception_occurred()) {
+      printf("Exception at force 5 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    double *Fdata = (double*)jl_array_data(_F);
    for (int i = 0; i < 3*Nat; i++) F[i] = Fdata[i];
-
+   if (jl_exception_occurred()) {
+      printf("Exception at force 6 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    JL_GC_POP();
-
+   if (jl_exception_occurred()) {
+      printf("Exception at force 7 : %s \n", 
+             jl_typeof_str(jl_exception_occurred()));
+   }
    return; 
 }
 
