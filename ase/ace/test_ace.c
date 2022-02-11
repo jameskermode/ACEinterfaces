@@ -18,7 +18,7 @@ int main(void){
   char cmd = *"IP = read_dict( load_dict(\"/home/eng/essswb/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])";
 
   /* required: setup the Julia context */
-  jl_init();
+  ace_init(1);
 
   printf("#### STARTING ENERGY AND FORCE CALCULATIONS ####\n"); 
   for (int i = 0; i < 100000; i++)
