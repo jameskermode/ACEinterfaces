@@ -14,7 +14,7 @@ int main(void){
   int pbc[3] = {0, 0, 0};
   int Nat = 3;
   double F[9];
-  char calcid = *"IP";
+  //char calcid = *"IP";
   //char cmd = *"IP = read_dict( load_dict(\"/home/cdt1906/Documents/phd/ACE_dev/interfaces/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])";
   /* required: setup the Julia context */
   int a = ace_init(1);
@@ -24,9 +24,8 @@ int main(void){
   printf("#### STARTING ENERGY AND FORCE CALCULATIONS ####\n"); 
   for (int i = 0; i < 100000; i++)
   {
-    printf("%s\n", &calcid);
-    double E = energy(&calcid,  &X[0], &Z[0], &cell[0], &pbc[0], Nat);
-    forces(&calcid, &F[0], &X[0], &Z[0], &cell[0], &pbc[0], Nat);
+    double E = energy(&"IP"[0],  &X[0], &Z[0], &cell[0], &pbc[0], Nat);
+    forces(&"IP"[0], &F[0], &X[0], &Z[0], &cell[0], &pbc[0], Nat);
   }
   printf("#### 100,000 energy and force evaluations without a problem ####\n");
 
