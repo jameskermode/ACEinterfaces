@@ -15,14 +15,16 @@ int main(void){
   int Nat = 3;
   double F[9];
   char calcid = *"IP";
-  char cmd = *"IP = read_dict( load_dict(\"/home/eng/essswb/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])";
-
+  //char cmd = *"IP = read_dict( load_dict(\"/home/cdt1906/Documents/phd/ACE_dev/interfaces/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])";
   /* required: setup the Julia context */
-  ace_init(1);
+  int a = ace_init(1);
+  printf("Initialization successful if 0: %d\n", a);
+  jl_eval_string("IP = read_dict( load_dict(\"/home/cdt1906/Documents/phd/ACE_dev/interfaces/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])");
 
   printf("#### STARTING ENERGY AND FORCE CALCULATIONS ####\n"); 
   for (int i = 0; i < 100000; i++)
   {
+    printf("%s\n", &calcid);
     double E = energy(&calcid,  &X[0], &Z[0], &cell[0], &pbc[0], Nat);
     forces(&calcid, &F[0], &X[0], &Z[0], &cell[0], &pbc[0], Nat);
   }

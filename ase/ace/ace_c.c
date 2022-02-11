@@ -108,6 +108,7 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
       printf("Exception at energy 2 : %s \n", 
              jl_typeof_str(jl_exception_occurred()));
    }
+   printf("%s\n", calcid);
    jl_value_t* calc = jl_eval_string(calcid);
    if (jl_exception_occurred()) {
       printf("Exception at energy 3 : %s \n", 
