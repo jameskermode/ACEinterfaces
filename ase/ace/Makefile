@@ -13,7 +13,7 @@ clean:
 ace_c.o: ace_c.h
 
 ace_c.so: ace_c.o
-	gcc ${LDFLAGS} -shared $< -o $@
+	gcc $< ${LDFLAGS} -shared -o $@
 
 test_ace: test_ace.o ace_c.o
-	gcc ${LDFLAGS} $^ -o $@
+	gcc $^ ${LDFLAGS} -o $@
