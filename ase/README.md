@@ -32,3 +32,9 @@ short example:
 import ace
 ace_calc = ace.ACECalculator(jsonpath="../assets/CH_ace_test.json", ACEversion=1)
 ```
+
+If you do not have `ACE1.jl` set up just create a fresh julia environment with all the necessary packages installed by executing:
+
+```julia
+using Pkg; Pkg.activate("."); pkg"registry add https://github.com/JuliaRegistries/General"; pkg"registry add https://github.com/JuliaMolSim/MolSim.git"; pkg"add JuLIP ACE1 PyCall ASE IPFitting"
+```
