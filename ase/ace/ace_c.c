@@ -30,14 +30,15 @@ int ace_init(int32_t ACE_version) {
              jl_typeof_str(jl_exception_occurred()));
    }
    
-   _atoms_from_c = jl_eval_string("(X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
+   _atoms_from_c = jl_eval_string("GC.@preserve X Z cell bc (X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
    if (jl_exception_occurred()) {
       printf("Exception at defining _atoms_from_c: %s \n", 
              jl_typeof_str(jl_exception_occurred()));
    }
-   _energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
-   _forcefcn = (jl_value_t*)jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
-   _stressfcn = (jl_value_t*)jl_eval_string("(calc, at) -> vcat(stress(calc, at)...)");
+   //_energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
+   _energyfcn = (jl_value_t*)jl_eval_string("GC.@preserve calc at X Z cell bc (calc, at) -> energy(calc, at)");
+   _forcefcn = (jl_value_t*)jl_eval_string("GC.@preserve calc at X Z cell bc (calc, at) -> mat(forces(calc, at))[:]");
+   _stressfcn = (jl_value_t*)jl_eval_string("GC.@preserve calc at X Z cell bc (calc, at) -> vcat(stress(calc, at)...)");
    if (jl_exception_occurred()) {
       printf("Exception at defining _energy, _force etc. : %s \n", 
              jl_typeof_str(jl_exception_occurred()));

@@ -9,11 +9,11 @@ Z = [6, 6, 6]
 cell = [50.0,  0.0,  0.0,  0.0, 50.0,  0.0,  0.0,  0.0, 50.0]
 bc = [0, 0, 0]
 
-at = Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))
+GC.@preserve X Z cell bc at = Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))
 
 println("#### STARTING ENERGY AND FORCE CALCULATIONS ####"); 
-for i in 1:100000000 
-    E = energy(IP, at)
-    F = forces(IP, at)
+for i in 1:100000 
+    GC.@preserve IP E = energy(IP, at)
+    GC.@preserve IP F = forces(IP, at)
 end
 println("#### 100,000,000 energy and force evaluations without a problem ####");
