@@ -14,8 +14,7 @@ int main(void){
   int pbc[3] = {0, 0, 0};
   int Nat = 3;
   double F[9];
-  //char calcid = *"IP";
-  //char cmd = *"IP = read_dict( load_dict(\"/home/cdt1906/Documents/phd/ACE_dev/interfaces/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])";
+
   /* required: setup the Julia context */
   int a = ace_init(1);
   printf("Initialization successful if 0: %d\n", a);

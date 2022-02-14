@@ -14,6 +14,8 @@ Other files are not necessary for debugging the C-Julia embedding
 
 ## Installation 
 
+0. in `ace/test_ace.c` change the path in line 21 to point to the correct potential file
+
 1. Compile the C interface, modifying the following commands as suitable: 
 ```
 cd ace
