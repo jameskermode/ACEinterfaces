@@ -30,15 +30,17 @@ int ace_init(int32_t ACE_version) {
              jl_typeof_str(jl_exception_occurred()));
    }
    
-   _atoms_from_c = jl_eval_string("GC.@preserve X Z cell bc (X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
+   _atoms_from_c = jl_eval_string("(X, Z, cell, bc) -> Atoms(X = X, Z = Z, cell=cell, pbc = Bool.(bc))");
    if (jl_exception_occurred()) {
       printf("Exception at defining _atoms_from_c: %s \n", 
              jl_typeof_str(jl_exception_occurred()));
    }
-   //_energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
-   _energyfcn = (jl_value_t*)jl_eval_string("GC.@preserve calc at X Z cell bc (calc, at) -> energy(calc, at)");
-   _forcefcn = (jl_value_t*)jl_eval_string("GC.@preserve calc at X Z cell bc (calc, at) -> mat(forces(calc, at))[:]");
-   _stressfcn = (jl_value_t*)jl_eval_string("GC.@preserve calc at X Z cell bc (calc, at) -> vcat(stress(calc, at)...)");
+   _energyfcn = (jl_value_t*)jl_get_function(jl_main_module, "energy");
+   _forcefcn = (jl_value_t*)jl_eval_string("(calc, at) -> mat(forces(calc, at))[:]");
+   _stressfcn = (jl_value_t*)jl_eval_string("(calc, at) -> vcat(stress(calc, at)...)");
+   //_energyfcn = (jl_value_t*)jl_eval_string("GC.@preserve IP at X Z cell bc (calc, at) -> energy(calc, at)");
+   //_forcefcn = (jl_value_t*)jl_eval_string("GC.@preserve IP at X Z cell bc (calc, at) -> mat(forces(calc, at))[:]");
+   //_stressfcn = (jl_value_t*)jl_eval_string("GC.@preserve IP at X Z cell bc (calc, at) -> vcat(stress(calc, at)...)");
    if (jl_exception_occurred()) {
       printf("Exception at defining _energy, _force etc. : %s \n", 
              jl_typeof_str(jl_exception_occurred()));
@@ -58,7 +60,7 @@ jl_value_t* atoms_from_c(double* X,
                          double* cell, 
                          int32_t* bc, 
                          int Nat) {
-
+   /*         
    jl_value_t* jl_float64 = jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
    jl_value_t* jl_int32 = jl_apply_array_type((jl_value_t*)jl_int32_type, 1);
    jl_array_t* _X = jl_alloc_array_1d(jl_float64, 3 * Nat);
@@ -79,13 +81,29 @@ jl_value_t* atoms_from_c(double* X,
    for (int i = 0; i < 3; i++) bcData[i] = bc[i]; 
    int32_t *ZData = (int32_t*)jl_array_data(_Z);
    for (int i = 0; i < Nat; i++) ZData[i] = Z[i]; 
+   */
+   jl_value_t* jl_float64 = jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
+   jl_value_t* jl_int32 = jl_apply_array_type((jl_value_t*)jl_int32_type, 1);
+   jl_array_t* _X = jl_ptr_to_array_1d(jl_float64, X, Nat*3, 0);
+   jl_array_t* _Z = jl_ptr_to_array_1d(jl_int32, Z, Nat, 0);
+   jl_array_t* _cell = jl_ptr_to_array_1d(jl_float64, cell, 9, 0);
+   jl_array_t* _bc = jl_ptr_to_array_1d(jl_int32, bc, 3, 0);
+   
+   jl_value_t** gc_args;
+   JL_GC_PUSHARGS(gc_args, 4);
+   gc_args[0] = (jl_value_t*)_X;
+   gc_args[1] = (jl_value_t*)_Z;
+   gc_args[2] = (jl_value_t*)_cell;
+   gc_args[3] = (jl_value_t*)_bc;
 
    jl_value_t* at_args[] = {(jl_value_t*)_X, (jl_value_t*)_Z, (jl_value_t*)_cell, (jl_value_t*)_bc};   
    if (jl_exception_occurred()) {
       printf("Exception at creating arguments at atoms_from_c : %s \n", 
              jl_typeof_str(jl_exception_occurred()));
    }
-   return jl_call(_atoms_from_c, at_args, 4);
+   jl_value_t* at = jl_call(_atoms_from_c, at_args, 4);
+   JL_GC_POP();
+   return at;
 }
 
 
@@ -98,6 +116,7 @@ double unbox_float64(jl_value_t* jlval) {
 }
 
 double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
+//double energy(jl_value_t** calc, double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
 
    jl_value_t** args; 
    if (jl_exception_occurred()) {
@@ -121,6 +140,7 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
              jl_typeof_str(jl_exception_occurred()));
    }
    jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
+   //JL_GC_PUSH1(&at);
    if (jl_exception_occurred()) {
       printf("Exception at energy 5 : %s \n", 
              jl_typeof_str(jl_exception_occurred()));
@@ -162,6 +182,8 @@ double energy(char* calcid, double* X, int32_t* Z, double* cell, int32_t* pbc, i
 
 void forces(char* calcid, double *F, 
               double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
+//void forces(jl_value_t* calc, double *F, 
+//             double* X, int32_t* Z, double* cell, int32_t* pbc, int Nat){
   
    jl_value_t** args; 
    if (jl_exception_occurred()) {
@@ -180,6 +202,7 @@ void forces(char* calcid, double *F,
    }
    args[0] = calc; 
    jl_value_t* at = atoms_from_c(X, Z, cell, pbc, Nat);
+   //JL_GC_PUSH1(&at);
    if (jl_exception_occurred()) {
       printf("Exception at force 4 : %s \n", 
              jl_typeof_str(jl_exception_occurred()));
