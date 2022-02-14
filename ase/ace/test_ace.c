@@ -22,12 +22,12 @@ int main(void){
   jl_eval_string("IP = read_dict( load_dict(\"/home/cdt1906/Documents/phd/ACE_dev/interfaces/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])");
 
   printf("#### STARTING ENERGY AND FORCE CALCULATIONS ####\n"); 
-  for (int i = 0; i < 100000; i++)
+  for (int i = 0; i < 10; i++)
   {
     double E = energy(&"IP"[0],  &X[0], &Z[0], &cell[0], &pbc[0], Nat);
     forces(&"IP"[0], &F[0], &X[0], &Z[0], &cell[0], &pbc[0], Nat);
   }
-  printf("#### 100,000 energy and force evaluations without a problem ####\n");
+  printf("#### 1,000,000 energy and force evaluations without a problem ####\n");
 
   jl_atexit_hook(0);
   return 0;

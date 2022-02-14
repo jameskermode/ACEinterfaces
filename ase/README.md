@@ -1,7 +1,14 @@
 ## Instructions ACE ASE Interface 
 
-This folder contains an ASE calculator to evaluate `ACE.jl` potentials from python : 
+This is the `debug` version of ACEinterfaces. 
+
+This folder contains an ASE calculator to evaluate `ACE1.jl` potentials from python : 
+
+The relevant files for debugging the C-Julia interface are:
 * `ace/ace_c.h` and `ace/ace_c.c` : the C interface layer 
+* `test_ace.c` is an executable that can reproduce the segfaults
+* `Makefile` can be used to compile the project
+Other files are not necessary for debugging the C-Julia embedding
 * `ace/ase.py` : the python ASE calculator wrapping the C interface 
 * `test_ase_calc.py` : a short test code
 
@@ -11,30 +18,14 @@ This folder contains an ASE calculator to evaluate `ACE.jl` potentials from pyth
 ```
 cd ace
 export JULIA_DIR=/PATH/TO/JULIA/FOLDER
-gcc -fPIC -c ace_c.c -I$JULIA_DIR/include/julia 
-gcc ace_c.o -L$JULIA_DIR/lib -Wl,-rpath,$JULIA_DIR/lib -ljulia -shared -o ace_c.so
+make
 ```
-where `/PATH/TO/JULIA/FOLDER` refers to something like `/home/cdt1906/Applications/julia-1.6.1` (the main folder of julia, not the `bin` folder of the julia executable)
+where `/PATH/TO/JULIA/FOLDER` refers to something like `~/Applications/julia-1.7.1` (the main folder of julia, not the `bin` folder of the julia executable)
 
-2. Run `python setup.py install`
-
-3. Try it out
-```
-python test_ase_calc.py
-```
-
-
-## Example usage
-see `test_ase_calc.py`
-
-short example:
-```
-import ace
-ace_calc = ace.ACECalculator(jsonpath="../assets/CH_ace_test.json", ACEversion=1)
-```
+Then you can simply run the `test_ace` executable. If the `for` loop is iterated over 100,000 times there is usually no problem, but if it is increased to `1,000,000` iterations a segfault will appear during running the code. 
 
 If you do not have `ACE1.jl` set up just create a fresh julia environment with all the necessary packages installed by executing:
 
 ```julia
-using Pkg; Pkg.activate("."); pkg"registry add https://github.com/JuliaRegistries/General"; pkg"registry add https://github.com/JuliaMolSim/MolSim.git"; pkg"add JuLIP ACE1 PyCall ASE IPFitting"
+using Pkg; Pkg.activate("."); pkg"registry add https://github.com/JuliaRegistries/General"; pkg"registry add https://github.com/JuliaMolSim/MolSim.git"; pkg"add JuLIP ACE1"
 ```
