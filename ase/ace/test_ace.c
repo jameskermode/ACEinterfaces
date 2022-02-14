@@ -21,7 +21,7 @@ int main(void){
   jl_eval_string("IP = read_dict( load_dict(\"/home/cdt1906/Documents/phd/ACE_dev/interfaces/ACEinterfaces/assets/CH_ACE1_test.json\")[\"IP\"])");
 
   printf("#### STARTING ENERGY AND FORCE CALCULATIONS ####\n"); 
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 1000000; i++)
   {
     double E = energy(&"IP"[0],  &X[0], &Z[0], &cell[0], &pbc[0], Nat);
     forces(&"IP"[0], &F[0], &X[0], &Z[0], &cell[0], &pbc[0], Nat);
