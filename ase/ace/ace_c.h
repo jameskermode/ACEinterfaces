@@ -10,3 +10,5 @@ void stress(char* , double *S, double* X, int* Z, double* cell, int* pbc, int Na
 int ace_init(int ACE_version); 
 
 void ace_cleanup();
+
+void set_global(char* calcid);

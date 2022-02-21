@@ -1,5 +1,5 @@
 
-CFLAGS = -g -fPIC -I${JULIA_DIR}/include/julia -I.
+CFLAGS = -g -fPIC -I${JULIA_DIR}/include/julia -I. -O
 LDFLAGS = -Wl,-rpath,${JULIA_DIR}/lib -L${JULIA_DIR}/lib -ljulia 
 
 all: ace_c.so test_ace

@@ -44,6 +44,10 @@ class ACECalculator(Calculator):
     self.jl_eval_string.restype = None
     self.jl_eval_string.argtypes = [c_char_p,]
 
+    self.set_global = self.lib.set_global
+    self.set_global.restype = None
+    self.set_global.argtypes = [c_char_p,]
+
     self.energy = self.lib.energy
     self.energy.restype = c_double
     self.energy.argtypes = [c_char_p,    # calculator id 
@@ -126,6 +130,7 @@ class ACECalculator(Calculator):
     if verbose:
         sys.stderr.write(f"Loading potential: {cmd}\n")
     self.julia_eval(cmd)
+    self.set_global(self.calcid_c)
 
   
   def calculate(self, atoms, properties, system_changes):
